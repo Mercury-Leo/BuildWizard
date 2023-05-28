@@ -7,7 +7,7 @@
     "Build"
   ],
   "dependencies": {
-    "odininspector": "3.1.12.2"
+    "odininspector": "3.1.12"
  },
   "author": {
     "name": "Mercury Finnegan",
