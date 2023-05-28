@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2aa7a53e76cf1584d8d20c2637a877b4, type: 3}
   m_Name: Project Version
   m_EditorClassIdentifier: 
-  major: 1
+  major: 0
   minor: 0
