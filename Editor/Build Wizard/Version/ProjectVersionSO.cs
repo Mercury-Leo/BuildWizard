@@ -13,9 +13,7 @@ using UnityEngine;
 
 namespace Editor.Build_Wizard.Version
 {
-#if UNITY_EDITOR
-    [CreateAssetMenu(fileName = "Project Version", menuName = "ScriptableObjects/Version")]
-#endif
+    [CreateAssetMenu(fileName = "Project Version", menuName = "Build Wizard/Version")]
     public class ProjectVersionSO : ScriptableObject
     {
         [SerializeField, ReadOnly] private int major;
