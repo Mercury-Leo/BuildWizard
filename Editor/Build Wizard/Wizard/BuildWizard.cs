@@ -56,8 +56,11 @@ namespace Editor.Build_Wizard.Wizard
         private const string AbsorberName = "Launcher";
         private const string FileName = AbsorberName + ".exe";
         private const string VersionInformationName = "VersionInformation.txt";
-        private const string ProjectVersionName = "Project Version";
         private const string EditorBuildLocationKey = "LastBuildLocation";
+        private const string ResourcesFolder = "Resources";
+        private const string ProjectVersion = "Project Version";
+        private const string Assets = "Assets";
+        private const string AssetFileEnding = ".asset";
 
 #pragma warning disable CS0414
         private bool _upgradedMajor;
@@ -72,7 +75,7 @@ namespace Editor.Build_Wizard.Wizard
 
         private void Awake()
         {
-            LoadProjectVersion();
+            _projectVersion = FindOrCreateProjectVersion();
             SetVersionVisuals();
 
             if (EditorPrefs.HasKey(EditorBuildLocationKey))
@@ -255,9 +258,32 @@ namespace Editor.Build_Wizard.Wizard
             _minor = _projectVersion.Minor;
         }
 
-        private void LoadProjectVersion()
+        private ProjectVersionSO FindOrCreateProjectVersion()
+    {
+        var path = Path.Combine(Application.dataPath, ResourcesFolder);
+
+        if (!Directory.Exists(path))
         {
-            _projectVersion = Resources.Load<ProjectVersionSO>(ProjectVersionName);
+            Directory.CreateDirectory(path);
+            CreateProjectVersion();
         }
+
+        var projectVersion = Resources.Load<ProjectVersionSO>(ProjectVersion);
+
+        if (projectVersion == null)
+        {
+            projectVersion = CreateProjectVersion();
+        }
+
+        return projectVersion;
+    }
+
+    private ProjectVersionSO CreateProjectVersion()
+    {
+        var version = ScriptableObject.CreateInstance<ProjectVersionSO>();
+        AssetDatabase.CreateAsset(version, Path.Combine(Assets, ResourcesFolder, ProjectVersion + AssetFileEnding));
+        AssetDatabase.SaveAssets();
+        return version;
+    }
     }
 }
