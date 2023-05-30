@@ -9,7 +9,7 @@
 using System.IO;
 using System.Text;
 
-namespace Editor.Build_Wizard.TextFile {
+namespace Build_Wizard.TextFile {
 	public class TextFileWriter {
 		public void WriteToTextFileAt(string path, string content)
 		{
