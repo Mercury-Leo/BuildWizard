@@ -8,16 +8,16 @@
 
 using System.IO;
 using System.Text.RegularExpressions;
-using Editor.Build_Wizard.Git.Extensions;
-using Editor.Build_Wizard.TextFile;
-using Editor.Build_Wizard.Version;
+using Build_Wizard.Git.Extensions;
+using Build_Wizard.TextFile;
+using Build_Wizard.Version;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Editor.Build_Wizard.Wizard
+namespace Build_Wizard.Wizard
 {
    public class BuildWizard : OdinEditorWindow
     {
