@@ -7,6 +7,7 @@
  */
 
 using System.IO;
+using System.Text.RegularExpressions;
 using Editor.Build_Wizard.Git.Extensions;
 using Editor.Build_Wizard.TextFile;
 using Editor.Build_Wizard.Version;
