@@ -9,7 +9,7 @@
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace Editor.Build_Wizard.Wizard
+namespace Build_Wizard.Wizard
 {
     public class BuildProcessor : IPreprocessBuildWithReport
     {
