@@ -6,12 +6,12 @@
  * will be construed as acceptance of the foregoing conditions.
  */
 
-using Editor.Build_Wizard.Git.Extensions;
+using Build_Wizard.Git.Extensions;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor.Build_Wizard.Version
+namespace Build_Wizard.Version
 {
     [CreateAssetMenu(fileName = "Project Version", menuName = "Build Wizard/Version")]
     public class ProjectVersionSO : ScriptableObject
