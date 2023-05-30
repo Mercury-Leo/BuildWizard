@@ -42,6 +42,7 @@ namespace Editor.Build_Wizard.Wizard
         private int _minor;
         
         [FoldoutGroup("Version"), ReadOnly] [ShowInInspector]
+        [Tooltip("The number of commits since the last Tag. In case there are no tags found, number of commits since the start.")]
         private int Commit => int.Parse(GitExtensions.GetNumberOfCommits());
 
         private const BuildOptions ReleaseOptions = BuildOptions.CleanBuildCache | BuildOptions.ShowBuiltPlayer;
