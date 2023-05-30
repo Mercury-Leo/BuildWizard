@@ -8,10 +8,10 @@
 
 using System;
 using System.Diagnostics;
-using Editor.Build_Wizard.Process.Extensions;
+using Build_Wizard.Process.Extensions;
 using UnityEngine;
 
-namespace Editor.Build_Wizard.Git.Extensions
+namespace Build_Wizard.Git.Extensions
 {
     public static class GitExtensions
     {
