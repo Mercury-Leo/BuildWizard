@@ -104,7 +104,7 @@ namespace Editor.Build_Wizard.Wizard
                 var path = GetBuildPath(version, ReleaseFolder);
                 var buildOptions = GetBuildOptions(ReleaseOptions, path, scenes);
                 BuildPlayer(buildOptions);
-                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch);
+                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch, _projectVersion.FullVersion);
             }
 
             version = SetVersion();
@@ -114,7 +114,7 @@ namespace Editor.Build_Wizard.Wizard
                 var path = GetBuildPath(version, DebugFolder);
                 var buildOptions = GetBuildOptions(DebugOptions, path, scenes);
                 BuildPlayer(buildOptions);
-                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch);
+                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch, _projectVersion.FullVersion);
             }
 
             if (deepProfileBuild)
@@ -122,7 +122,7 @@ namespace Editor.Build_Wizard.Wizard
                 var path = GetBuildPath(version, DeepProfileFolder);
                 var buildOptions = GetBuildOptions(DeepProfileOptions, path, scenes);
                 BuildPlayer(buildOptions);
-                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch);
+                WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch, _projectVersion.FullVersion);
             }
 
             IsBuilding = false;
