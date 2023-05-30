@@ -9,7 +9,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace Editor.Build_Wizard.Process.Extensions
+namespace Build_Wizard.Process.Extensions
 {
     public static class ProcessExtensions
     {
