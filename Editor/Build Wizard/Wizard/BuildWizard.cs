@@ -66,7 +66,7 @@ namespace Build_Wizard.Wizard
         private const string ProjectVersion = "Project Version";
         private const string Assets = "Assets";
         private const string AssetFileEnding = ".asset";
-        private const string Pattern = @"^(.*\/){0,1}(.{1,10})";
+        private const string Pattern = @"^(.*\/){0,1}(.{1,15})";
         private const string Dash = "-";
 
 #pragma warning disable CS0414
