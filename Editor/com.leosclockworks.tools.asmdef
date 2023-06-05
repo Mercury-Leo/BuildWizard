@@ -1,5 +1,5 @@
 {
-    "name": "com.leosclockworks.build",
+    "name": "com.leosclockworks.tools",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [
