@@ -170,7 +170,7 @@ namespace Build_Wizard.Wizard
             var buildOptions = GetBuildOptions(options, path, scenes);
             BuildPlayer(buildOptions);
             WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch,
-                _projectVersion.FullVersion);
+                _projectVersion.FullVersion, DateTime.Now.ToString("MM/dd/yyyy hh:mm tt"));
         }
 
         private void CheckBuildLocation()
