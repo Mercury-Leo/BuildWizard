@@ -58,7 +58,6 @@ namespace Build_Wizard.Wizard
         private const string DebugFolder = "Debug";
         private const string DeepProfileFolder = "DeepProfile";
         private const string BuildFolder = "Builds";
-        private const string AbsorberName = "Launcher";
         private const string FileName = AbsorberName + ".exe";
         private const string VersionInformationName = "VersionInformation.txt";
         private const string EditorBuildLocationKey = "LastBuildLocation";
@@ -68,6 +67,8 @@ namespace Build_Wizard.Wizard
         private const string AssetFileEnding = ".asset";
         private const string Pattern = @"^(.*\/){0,1}(.{1,15})";
         private const string Dash = "-";
+        
+        private string AbsorberName = "Product";
 
 #pragma warning disable CS0414
         private bool _upgradedMajor;
@@ -82,6 +83,7 @@ namespace Build_Wizard.Wizard
 
         private void Awake()
         {
+            AbsorberName = Application.productName;
             _projectVersion = FindOrCreateProjectVersion();
             SetVersionVisuals();
             _commit = int.Parse(GitExtensions.GetNumberOfCommits());
