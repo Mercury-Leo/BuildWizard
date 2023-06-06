@@ -6,6 +6,7 @@
  * will be construed as acceptance of the foregoing conditions.
  */
 
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using Build_Wizard.Git.Extensions;
