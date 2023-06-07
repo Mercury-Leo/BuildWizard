@@ -126,6 +126,7 @@ namespace Build_Wizard.Wizard
 
             if (deepProfileBuild)
             {
+                EditorUserBuildSettings.SetPlatformSettings(EditorUserBuildSettings.activeBuildTarget.ToString(),"CopyPDBFiles", "true");
                 BuildFlow(version, scenes, branchName, DeepProfileFolder, DeepProfileOptions);
             }
 
