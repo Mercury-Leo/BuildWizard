@@ -131,6 +131,7 @@ namespace Build_Wizard.Wizard
             }
 
             IsBuilding = false;
+            SetVersion(true);
             Close();
         }
 
