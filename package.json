@@ -1,6 +1,6 @@
 {
   "name": "com.leosclockworks.tools",
-  "version": "0.1.6",
+  "version": "0.1.65",
   "displayName": "Leo's Build Wizard",
   "description": "This package holds the build wizard.",
   "keywords": [
