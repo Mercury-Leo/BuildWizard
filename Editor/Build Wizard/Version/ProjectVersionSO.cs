@@ -22,7 +22,7 @@ namespace Build_Wizard.Version
         public int Major => major;
         public int Minor => minor;
 
-        public string CoreVersion = $"{major}.{minor}";
+        public string CoreVersion => $"{major}.{minor}";
         public string Version => $"{CoreVersion}.{GitExtensions.GetNumberOfCommits()}";
         public string FullVersion => $"{Version}-{GitExtensions.CommitHash}";
 
