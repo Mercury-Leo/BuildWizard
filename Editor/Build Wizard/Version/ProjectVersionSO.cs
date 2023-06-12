@@ -8,8 +8,10 @@
 
 using Build_Wizard.Git.Extensions;
 using Sirenix.OdinInspector;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
 
 namespace Build_Wizard.Version
 {
@@ -53,8 +55,10 @@ namespace Build_Wizard.Version
 
         private void SaveSO()
         {
+#if UNITY_EDITOR
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
+#endif
         }
     }
 }
