@@ -131,7 +131,7 @@ namespace Build_Wizard.Wizard
             }
 
             IsBuilding = false;
-            SetVersion(true);
+            PlayerSettings.bundleVersion = _projectVersion.CoreVersion;
             Close();
         }
 
