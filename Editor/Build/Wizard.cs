@@ -18,7 +18,7 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 using Utility.Git.Extensions;
 using Utility.TextFile;
-using Version;
+using ProjectVersion;
 
 namespace Build
 {
