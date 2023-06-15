@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEngine;
 using Utility.Git.Extensions;
 
-namespace Version
+namespace ProjectVersion
 {
     [CreateAssetMenu(fileName = "Project Version", menuName = "Build Wizard/Version")]
     public class ProjectVersionSO : ScriptableObject
