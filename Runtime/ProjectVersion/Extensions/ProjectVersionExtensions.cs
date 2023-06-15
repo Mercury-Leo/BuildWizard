@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace Version.Extensions
+namespace ProjectVersion.Extensions
 {
     public static class ProjectVersionExtensions
     {
