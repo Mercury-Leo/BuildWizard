@@ -136,15 +136,6 @@ namespace Build
             Close();
         }
 
-        [Button]
-        public void BuildAll()
-        {
-            releaseBuild = true;
-            debugBuild = true;
-            deepProfileBuild = true;
-            Build();
-        }
-
         [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMajor")]
         public void UpgradeMajor()
         {
