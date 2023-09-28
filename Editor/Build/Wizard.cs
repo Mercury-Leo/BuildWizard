@@ -1,15 +1,8 @@
-/*
- * This document is the property of Oversight Technologies Ltd that reserves its rights document and to
- * the data / invention / content herein described.This document, including the fact of its existence, is not to be
- * disclosed, in whole or in part, to any other party and it shall not be duplicated, used, or copied in any
- * form, without the express prior written permission of Oversight authorized person. Acceptance of this document
- * will be construed as acceptance of the foregoing conditions.
- */
-
 #if UNITY_EDITOR
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using Profiles;
 using ProjectVersion.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -26,13 +19,22 @@ namespace Build
     {
         private static readonly GUIContent WindowTitle = new("Build Wizard");
 
-        [BoxGroup("Build Type")] [InfoBox("Builds a clean release exe")] [SerializeField]
+        [InfoBox("Select the profile you want to build with")] [SerializeField]
+        private BuildProfileSO profile;
+
+        [ShowIf("@this.profile == null")]
+        [BoxGroup("Build Type")]
+        [InfoBox("Builds a clean release exe")]
+        [SerializeField]
         private bool releaseBuild;
 
-        [BoxGroup("Build Type")] [InfoBox("Builds a development exe")]
+        [ShowIf("@this.profile == null")] [BoxGroup("Build Type")] [InfoBox("Builds a development exe")]
         public bool debugBuild;
 
-        [BoxGroup("Build Type")] [InfoBox("Builds a development exe with Deep profiling enabled")] [SerializeField]
+        [ShowIf("@this.profile == null")]
+        [BoxGroup("Build Type")]
+        [InfoBox("Builds a development exe with Deep profiling enabled")]
+        [SerializeField]
         private bool deepProfileBuild;
 
         [FolderPath(RequireExistingPath = true, AbsolutePath = true)] [SerializeField]
@@ -65,6 +67,7 @@ namespace Build
         private const string BuildFolder = "Builds";
         private const string VersionInformationName = "VersionInformation.txt";
         private const string EditorBuildLocationKey = "LastBuildLocation";
+        private const string EditorProfileKey = "LastUsedProfile";
         private const string Pattern = @"^(.*\/){0,1}(.{1,15})";
         private const string Dash = "-";
 
@@ -79,34 +82,70 @@ namespace Build
         public static bool IsBuilding;
 
         private readonly TextFileWriter _textFile = new();
-
         private ProjectVersionSO _projectVersion;
+        private BuildTarget _currentBuildTarget = BuildTarget.StandaloneWindows;
+        private BuildTargetGroup _currentBuildTargetGroup = BuildTargetGroup.Standalone;
 
         private void Awake()
         {
             _productName = Application.productName;
-            _fileName = _productName + ".exe";
             _projectVersion = ProjectVersionExtensions.FindOrCreateProjectVersion();
             SetVersionVisuals();
             _commit = int.Parse(GitExtensions.GetNumberOfCommits());
-
+            _fileName = _productName + ".exe";
             if (EditorPrefs.HasKey(EditorBuildLocationKey))
             {
                 buildLocation = EditorPrefs.GetString(EditorBuildLocationKey);
             }
+
+            if (EditorPrefs.HasKey(EditorProfileKey))
+            {
+                LoadProfile();
+            }
         }
 
         [Button]
-        [DisableIf("@!(this.releaseBuild || this.debugBuild || this.deepProfileBuild)")]
+        [DisableIf("@!(this.releaseBuild || this.debugBuild || this.deepProfileBuild || this.profile != null)")]
         public void Build()
         {
-            if (!(releaseBuild || debugBuild || deepProfileBuild))
+            SaveCurrentBuildTarget();
+            if (profile != null)
             {
+                SaveProfile();
+                BuildProfile();
                 return;
             }
 
+            if (releaseBuild || debugBuild || deepProfileBuild)
+            {
+                BuildPresets();
+                return;
+            }
+
+            Debug.LogWarning("Tried to build without any options selected.", this);
+        }
+
+        [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMajor")]
+        public void UpgradeMajor()
+        {
+            _projectVersion.UpgradeMajor();
+            _upgradedMajor = true;
+            SetVersionVisuals();
+        }
+
+        [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMinor")]
+        public void UpgradeMinor()
+        {
+            _projectVersion.UpgradeMinor();
+            _upgradedMinor = true;
+            SetVersionVisuals();
+        }
+
+        private void BuildPresets()
+        {
             CheckBuildLocation();
 
+            _fileName = _productName + ".exe";
             var version = SetVersion(true);
             var scenes = GetBuildScenes();
             var branchName = GetFolderBranchName(GitExtensions.Branch);
@@ -131,25 +170,71 @@ namespace Build
                 BuildFlow(version, scenes, branchName, DeepProfileFolder, DeepProfileOptions);
             }
 
+            CleanupWizard();
+        }
+
+        private void BuildProfile()
+        {
+            CheckBuildLocation();
+            var scenes = GetBuildScenes();
+            var branchName = GetFolderBranchName(GitExtensions.Branch);
+
+            IsBuilding = true;
+            foreach (var buildData in profile.BuildTargets)
+            {
+                if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(buildData.TargetGroup, buildData.Target))
+                {
+                    Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
+                    continue;
+                }
+
+                if (buildData.overrideExecutableName)
+                {
+                    if (string.IsNullOrWhiteSpace(buildData.executableName))
+                    {
+                        Debug.LogWarning("Executable path was invalid, using default exe.", this);
+                        _fileName = _productName + ".exe";
+                    }
+                    else
+                    {
+                        _fileName = buildData.executableName + ".exe";
+                    }
+                }
+
+                EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
+                    ? StandaloneBuildSubtarget.Server
+                    : StandaloneBuildSubtarget.Player;
+
+                var version = SetVersion(buildData.isReleaseBuild);
+                var folder = buildData.platformTarget.ToString();
+
+                BuildFlow(version, scenes, branchName, folder, buildData.GetBuildOptions(),
+                    buildData.name, buildData.isHeadless);
+            }
+
+            CleanupWizard();
+        }
+
+        private void CleanupWizard()
+        {
             IsBuilding = false;
             PlayerSettings.bundleVersion = _projectVersion.CoreVersion;
+            RevertToCurrentBuildTarget();
             Close();
         }
 
-        [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMajor")]
-        public void UpgradeMajor()
+        private void SaveCurrentBuildTarget()
         {
-            _projectVersion.UpgradeMajor();
-            _upgradedMajor = true;
-            SetVersionVisuals();
+            _currentBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+            _currentBuildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
         }
 
-        [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMinor")]
-        public void UpgradeMinor()
+        private void RevertToCurrentBuildTarget()
         {
-            _projectVersion.UpgradeMinor();
-            _upgradedMinor = true;
-            SetVersionVisuals();
+            if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(_currentBuildTargetGroup, _currentBuildTarget))
+            {
+                Debug.LogError($"Failed to switch build target to {_currentBuildTarget}.", this);
+            }
         }
 
         [MenuItem("Build/Wizard")]
@@ -160,13 +245,14 @@ namespace Build
             window.Show();
         }
 
-        private void BuildFlow(string version, string[] scenes, string branchName, string folder, BuildOptions options)
+        private void BuildFlow(string version, string[] scenes, string branchName, string folder, BuildOptions options,
+            string buildName = "", bool isHeadless = false)
         {
-            var path = GetBuildPath(version, branchName, folder);
-            var buildOptions = GetBuildOptions(options, path, scenes);
+            var path = GetBuildPath(version, branchName, folder, buildName);
+            var buildOptions = GetBuildOptions(options, path, scenes, isHeadless);
             BuildPlayer(buildOptions);
             WriteBuildInformation(path, GitExtensions.FullCommitHash, GitExtensions.Branch,
-                _projectVersion.FullVersion, DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"));
+                _projectVersion.FullVersion, DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"), buildName);
         }
 
         private void CheckBuildLocation()
@@ -198,20 +284,20 @@ namespace Build
         private string SetVersion(bool isRelease = false)
         {
             var version = isRelease ? _projectVersion.Version : _projectVersion.FullVersion;
-            
+
             PlayerSettings.bundleVersion = version;
 
             return version;
         }
 
-        private string GetBuildPath(string version, string branch, string folder)
+        private string GetBuildPath(string version, string branch, string folder, string buildName = "")
         {
             var mainPath = buildLocation;
 
             EditorPrefs.SetString(EditorBuildLocationKey, buildLocation);
 
             var buildFolderName = branch + Dash + version;
-            var buildFolderPath = Path.Combine(mainPath, _productName, folder, buildFolderName);
+            var buildFolderPath = Path.Combine(mainPath, _productName, folder, buildFolderName, buildName);
 
             if (!Directory.Exists(buildFolderPath))
             {
@@ -221,12 +307,19 @@ namespace Build
             return Path.Combine(buildFolderPath, _fileName);
         }
 
-        private BuildPlayerOptions GetBuildOptions(BuildOptions option, string path, string[] scenes)
+        private BuildPlayerOptions GetBuildOptions(BuildOptions option, string path, string[] scenes,
+            bool isHeadless = false)
         {
-            return new BuildPlayerOptions
+            var buildOptions = new BuildPlayerOptions
             {
                 options = option, locationPathName = path, target = BuildTarget.StandaloneWindows64, scenes = scenes
             };
+            if (isHeadless)
+            {
+                buildOptions.subtarget = (int)StandaloneBuildSubtarget.Server;
+            }
+
+            return buildOptions;
         }
 
         private void BuildPlayer(BuildPlayerOptions options)
@@ -271,6 +364,35 @@ namespace Build
             var regex = new Regex(Pattern);
             var match = regex.Match(branch);
             return match.Success ? match.Groups[2].Value : string.Empty;
+        }
+
+        private void LoadProfile()
+        {
+            var assetPath = EditorPrefs.GetString(EditorProfileKey);
+
+            if (string.IsNullOrWhiteSpace(assetPath))
+            {
+                return;
+            }
+
+            var asset = AssetDatabase.LoadAssetAtPath<BuildProfileSO>(assetPath);
+            if (asset == null)
+            {
+                return;
+            }
+
+            profile = asset;
+        }
+
+        private void SaveProfile()
+        {
+            if (profile == null)
+            {
+                return;
+            }
+
+            var assetPath = AssetDatabase.GetAssetPath(profile);
+            EditorPrefs.SetString(EditorProfileKey, assetPath);
         }
     }
 }
