@@ -220,28 +220,6 @@ namespace Build
             CleanupWizard();
         }
 
-        private IEnumerator SwitchPlatformAsync(BuildProfileDataSO buildData)
-        {
-            if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
-                  EditorUserBuildSettings.activeBuildTarget == buildData.Target))
-            {
-                if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(buildData.TargetGroup, buildData.Target))
-                {
-                    Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
-                    yield return null;
-                }
-            }
-
-            EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
-                ? StandaloneBuildSubtarget.Server
-                : StandaloneBuildSubtarget.Player;
-
-            while (EditorApplication.isCompiling)
-            {
-                yield return null;
-            }
-        }
-
         private void CleanupWizard()
         {
             IsBuilding = false;
