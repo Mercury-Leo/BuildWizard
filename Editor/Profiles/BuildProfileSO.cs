@@ -8,6 +8,7 @@ using Editor;
 namespace Profiles
 {
     [CreateAssetMenu(fileName = "newBuildProfile", menuName = "Build Wizard/Profile")]
+    [InlineEditor]
     public class BuildProfileSO : ScriptableObject
     {
         [ListDrawerSettings(ShowIndexLabels = true)]
