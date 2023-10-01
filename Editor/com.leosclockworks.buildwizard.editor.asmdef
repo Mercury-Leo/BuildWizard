@@ -2,8 +2,7 @@
     "name": "com.leosclockworks.buildwizard.editor",
     "rootNamespace": "",
     "references": [
-        "GUID:999d31d8198168340a3daa81be2879a0",
-        "GUID:478a2357cc57436488a56e564b08d223"
+        "GUID:999d31d8198168340a3daa81be2879a0"
     ],
     "includePlatforms": [
         "Editor"
