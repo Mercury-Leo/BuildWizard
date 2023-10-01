@@ -211,7 +211,7 @@ namespace Build
                 }
 
                 var version = SetVersion(buildData.isReleaseBuild);
-                var folder = buildData.platformTarget;
+                var folder = profile.name;
 
                 BuildFlow(version, scenes, branchName, folder, buildData.GetBuildOptions(),
                     buildData.name, buildData.isHeadless);
