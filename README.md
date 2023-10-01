@@ -4,4 +4,4 @@ Features:
 - Build a set of builds by creating a build profile.
 - Saves builds in named folders.
 
-![plot](https://imgur.com/a/z9XU26c)https://imgur.com/a/z9XU26c)
+![plot][(https://imgur.com/a/z9XU26c)https://imgur.com/a/z9XU26c)]
