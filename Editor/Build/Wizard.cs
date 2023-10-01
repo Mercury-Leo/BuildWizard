@@ -236,7 +236,7 @@ namespace Build
 
         private void RevertToCurrentBuildTarget()
         {
-            if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(_currentBuildTargetGroup, _currentBuildTarget))
+            if (!EditorUserBuildSettings.SwitchActiveBuildTarget(_currentBuildTargetGroup, _currentBuildTarget))
             {
                 Debug.LogError($"Failed to switch build target to {_currentBuildTarget}.", this);
             }
