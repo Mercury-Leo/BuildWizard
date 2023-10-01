@@ -182,10 +182,14 @@ namespace Build
             IsBuilding = true;
             foreach (var buildData in profile.BuildTargets)
             {
-                if (!EditorUserBuildSettings.SwitchActiveBuildTarget(buildData.TargetGroup, buildData.Target))
+                if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
+                      EditorUserBuildSettings.activeBuildTarget == buildData.Target))
                 {
-                    Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
-                    continue;
+                    if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(buildData.TargetGroup, buildData.Target))
+                    {
+                        Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
+                        continue;
+                    }
                 }
 
                 if (buildData.overrideExecutableName)
