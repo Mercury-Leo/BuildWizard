@@ -1,13 +1,12 @@
 {
   "name": "com.leosclockworks.tools",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "displayName": "Leo's Build Wizard",
   "description": "This package holds the build wizard.",
   "keywords": [
     "Build"
   ],
   "dependencies": {
-    "com.unity.editorcoroutines": "1.0.0"
  },
   "author": {
     "name": "Mercury Finnegan",
