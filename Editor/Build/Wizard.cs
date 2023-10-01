@@ -2,12 +2,10 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Collections;
 using Profiles;
 using ProjectVersion.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -75,8 +73,6 @@ namespace Build
 
         private string _productName = "Product";
         private string _fileName;
-
-        private EditorCoroutine _switchPlatformCoroutine;
 
 #pragma warning disable CS0414
         private bool _upgradedMajor;
@@ -184,16 +180,23 @@ namespace Build
             var branchName = GetFolderBranchName(GitExtensions.Branch);
 
             IsBuilding = true;
+
             foreach (var buildData in profile.BuildTargets)
             {
-
-                if (_switchPlatformCoroutine != null)
+                if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
+                      EditorUserBuildSettings.activeBuildTarget == buildData.Target))
                 {
-                    EditorCoroutineUtility.StopCoroutine(_switchPlatformCoroutine);
-                    _switchPlatformCoroutine = null;
+                    if (!EditorUserBuildSettings.SwitchActiveBuildTarget(buildData.TargetGroup, buildData.Target))
+                    {
+                        Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
+                        continue;
+                    }
                 }
 
-                _switchPlatformCoroutine = EditorCoroutineUtility.StartCoroutine(SwitchPlatformAsync(buildData), this);
+                EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
+                    ? StandaloneBuildSubtarget.Server
+                    : StandaloneBuildSubtarget.Player;
+
                 if (buildData.overrideExecutableName)
                 {
                     if (string.IsNullOrWhiteSpace(buildData.executableName))
@@ -208,7 +211,7 @@ namespace Build
                 }
 
                 var version = SetVersion(buildData.isReleaseBuild);
-                var folder = buildData.platformTarget.ToString();
+                var folder = buildData.platformTarget;
 
                 BuildFlow(version, scenes, branchName, folder, buildData.GetBuildOptions(),
                     buildData.name, buildData.isHeadless);
