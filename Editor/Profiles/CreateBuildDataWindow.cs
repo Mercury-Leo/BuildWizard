@@ -6,7 +6,7 @@ using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor
+namespace Profile
 {
     public class CreateBuildDataWindow : OdinEditorWindow
     {
