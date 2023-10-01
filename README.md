@@ -5,4 +5,4 @@ Features:
 - Saves builds in named folders.
 
 
-![alt text](https://i.imgur.com/x7UxcJu.png)https://i.imgur.com/x7UxcJu.png)
+![](https://i.imgur.com/x7UxcJu.png)
