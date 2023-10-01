@@ -6,6 +6,7 @@ using Profiles;
 using ProjectVersion.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -73,6 +74,8 @@ namespace Build
 
         private string _productName = "Product";
         private string _fileName;
+
+        private EditorCoroutine _switchPlatformCoroutine;
 
 #pragma warning disable CS0414
         private bool _upgradedMajor;
@@ -182,16 +185,14 @@ namespace Build
             IsBuilding = true;
             foreach (var buildData in profile.BuildTargets)
             {
-                if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
-                      EditorUserBuildSettings.activeBuildTarget == buildData.Target))
+
+                if (_switchPlatformCoroutine != null)
                 {
-                    if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(buildData.TargetGroup, buildData.Target))
-                    {
-                        Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
-                        continue;
-                    }
+                    EditorCoroutineUtility.StopCoroutine(_switchPlatformCoroutine);
+                    _switchPlatformCoroutine = null;
                 }
 
+                _switchPlatformCoroutine = EditorCoroutineUtility.StartCoroutine(SwitchPlatformAsync(buildData), this);
                 if (buildData.overrideExecutableName)
                 {
                     if (string.IsNullOrWhiteSpace(buildData.executableName))
@@ -205,10 +206,6 @@ namespace Build
                     }
                 }
 
-                EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
-                    ? StandaloneBuildSubtarget.Server
-                    : StandaloneBuildSubtarget.Player;
-
                 var version = SetVersion(buildData.isReleaseBuild);
                 var folder = buildData.platformTarget.ToString();
 
@@ -217,6 +214,28 @@ namespace Build
             }
 
             CleanupWizard();
+        }
+
+        private IEnumerator SwitchPlatformAsync(BuildProfileDataSO buildData)
+        {
+            if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
+                  EditorUserBuildSettings.activeBuildTarget == buildData.Target))
+            {
+                if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(buildData.TargetGroup, buildData.Target))
+                {
+                    Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
+                    yield return null;
+                }
+            }
+
+            EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
+                ? StandaloneBuildSubtarget.Server
+                : StandaloneBuildSubtarget.Player;
+
+            while (EditorApplication.isCompiling)
+            {
+                yield return null;
+            }
         }
 
         private void CleanupWizard()
