@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Collections;
 using Profiles;
 using ProjectVersion.Extensions;
 using Sirenix.OdinInspector;
