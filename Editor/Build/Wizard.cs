@@ -183,6 +183,10 @@ namespace Build
 
             foreach (var buildData in profile.BuildTargets)
             {
+                 EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
+                    ? StandaloneBuildSubtarget.Server
+                    : StandaloneBuildSubtarget.Player;
+            
                 if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
                       EditorUserBuildSettings.activeBuildTarget == buildData.Target))
                 {
@@ -192,10 +196,6 @@ namespace Build
                         continue;
                     }
                 }
-
-                EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
-                    ? StandaloneBuildSubtarget.Server
-                    : StandaloneBuildSubtarget.Player;
 
                 if (buildData.overrideExecutableName)
                 {
