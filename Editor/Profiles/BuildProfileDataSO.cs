@@ -50,7 +50,7 @@ namespace Profiles
             ? result
             : BuildTargetGroup.Standalone;
 
-        public BuildTarget Target => Enum.TryParse<BuildTarget>(platformTargetGroup, out var result)
+        public BuildTarget Target => Enum.TryParse<BuildTarget>(platformTarget, out var result)
             ? result
             : BuildTarget.StandaloneWindows;
 
