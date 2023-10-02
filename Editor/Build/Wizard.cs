@@ -88,6 +88,8 @@ namespace Build
         private BuildTargetGroup _currentBuildTargetGroup = BuildTargetGroup.Standalone;
         private int _currentSubTarget;
 
+        public int callbackOrder => 0;
+
         private void Awake()
         {
             _productName = Application.productName;
