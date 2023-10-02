@@ -145,6 +145,11 @@ namespace Build
             SetVersionVisuals();
         }
 
+        public void OnPostprocessBuild(BuildReport report)
+        {
+            RevertToCurrentBuildTarget();
+        }
+
         private void BuildPresets()
         {
             CheckBuildLocation();
