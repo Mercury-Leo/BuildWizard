@@ -12,10 +12,11 @@ using UnityEngine;
 using Utility.Git.Extensions;
 using Utility.TextFile;
 using ProjectVersion;
+using UnityEditor.Build;
 
 namespace Build
 {
-    public class Wizard : OdinEditorWindow
+    public class Wizard : OdinEditorWindow, IPostprocessBuildWithReport
     {
         private static readonly GUIContent WindowTitle = new("Build Wizard");
 
@@ -85,6 +86,7 @@ namespace Build
         private ProjectVersionSO _projectVersion;
         private BuildTarget _currentBuildTarget = BuildTarget.StandaloneWindows;
         private BuildTargetGroup _currentBuildTargetGroup = BuildTargetGroup.Standalone;
+        private int _currentSubTarget;
 
         private void Awake()
         {
@@ -236,6 +238,8 @@ namespace Build
 
         private void RevertToCurrentBuildTarget()
         {
+            EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)_currentSubTarget;
+        
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(_currentBuildTargetGroup, _currentBuildTarget))
             {
                 Debug.LogError($"Failed to switch build target to {_currentBuildTarget}.", this);
