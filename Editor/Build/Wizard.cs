@@ -18,25 +18,16 @@ namespace Build
 {
     public class Wizard : OdinEditorWindow, IPostprocessBuildWithReport
     {
-        private static readonly GUIContent WindowTitle = new("Build Wizard");
+       private static readonly GUIContent WindowTitle = new("Build Wizard");
 
-        [InfoBox("Select the profile you want to build with")] [SerializeField]
+        [InfoBox("Select the profile you want to build with")]
+        [InlineButton(nameof(CreateProfile), SdfIconType.PersonBadge)]
+        [Tooltip("Build Profile")]
+        [SerializeField]
         private BuildProfileSO profile;
 
-        [ShowIf("@this.profile == null")]
-        [BoxGroup("Build Type")]
-        [InfoBox("Builds a clean release exe")]
-        [SerializeField]
-        private bool releaseBuild;
-
-        [ShowIf("@this.profile == null")] [BoxGroup("Build Type")] [InfoBox("Builds a development exe")]
-        public bool debugBuild;
-
-        [ShowIf("@this.profile == null")]
-        [BoxGroup("Build Type")]
-        [InfoBox("Builds a development exe with Deep profiling enabled")]
-        [SerializeField]
-        private bool deepProfileBuild;
+        [ShowIf("@profile == null")] [InlineButton(nameof(CreateBuildData), SdfIconType.File)] [SerializeField]
+        private List<BuildProfileDataSO> defaultBuildData;
 
         [FolderPath(RequireExistingPath = true, AbsolutePath = true)] [SerializeField]
         private string buildLocation = string.Empty;
@@ -50,27 +41,17 @@ namespace Build
         [FoldoutGroup("Version"), ReadOnly]
         [ShowInInspector]
         [Tooltip(
-            "The number of commits since the last Tag. In case there are no tags found, number of commits since the start.")]
+            "The number of commits since the last Tag. In case there are no tags, number of commits since the start.")]
         private int _commit;
 
-        private const BuildOptions ReleaseOptions = BuildOptions.CleanBuildCache | BuildOptions.ShowBuiltPlayer;
-
-        private const BuildOptions DebugOptions =
-            BuildOptions.Development | BuildOptions.AllowDebugging | BuildOptions.ShowBuiltPlayer |
-            BuildOptions.ConnectToHost;
-
-        private const BuildOptions DeepProfileOptions =
-            DebugOptions | BuildOptions.EnableDeepProfilingSupport | BuildOptions.DetailedBuildReport;
-
-        private const string ReleaseFolder = "Release";
-        private const string DebugFolder = "Debug";
-        private const string DeepProfileFolder = "DeepProfile";
         private const string BuildFolder = "Builds";
         private const string VersionInformationName = "VersionInformation.txt";
         private const string EditorBuildLocationKey = "LastBuildLocation";
         private const string EditorProfileKey = "LastUsedProfile";
         private const string Pattern = @"^(.*\/){0,1}(.{1,15})";
         private const string Dash = "-";
+        private const string ProfileFolderPath = "Assets" + "/" + ProfileFolder;
+        private const string ProfileFolder = "BuildProfiles";
 
         private string _productName = "Product";
         private string _fileName;
@@ -106,27 +87,39 @@ namespace Build
             {
                 LoadProfile();
             }
+
+            defaultBuildData = new() { CreateInstance<BuildProfileDataSO>() };
         }
 
-        [Button]
-        [DisableIf("@!(this.releaseBuild || this.debugBuild || this.deepProfileBuild || this.profile != null)")]
-        public void Build()
+        [MenuItem("Build/Wizard")]
+        private static void ShowBuildWindow()
+        {
+            var window = GetWindow<Wizard>();
+            window.titleContent = WindowTitle;
+            window.Show();
+        }
+
+        [ShowIf("@(this.defaultBuildData.Count > 0 && this.profile == null)")]
+        [Button("Build Default")]
+        public void BuildDefault()
+        {
+            BuildAllData(defaultBuildData, "Default");
+        }
+
+        [ShowIf("@(this.profile != null && this.profile.BuildTargets.Count > 0)")]
+        [Button("Build Profile")]
+        [InfoBox("Must ")]
+        public void BuildProfile()
         {
             SaveCurrentBuildTarget();
-            if (profile != null)
+            if (profile == null)
             {
-                SaveProfile();
-                BuildProfile();
+                Debug.LogError("Tried to build with a null profile!", this);
                 return;
             }
 
-            if (releaseBuild || debugBuild || deepProfileBuild)
-            {
-                BuildPresets();
-                return;
-            }
-
-            Debug.LogWarning("Tried to build without any options selected.", this);
+            SaveProfile();
+            BuildAllData(profile.BuildTargets, profile.name);
         }
 
         [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedMajor")]
@@ -145,44 +138,7 @@ namespace Build
             SetVersionVisuals();
         }
 
-        public void OnPostprocessBuild(BuildReport report)
-        {
-            RevertToCurrentBuildTarget();
-        }
-
-        private void BuildPresets()
-        {
-            CheckBuildLocation();
-
-            _fileName = _productName + ".exe";
-            var version = SetVersion(true);
-            var scenes = GetBuildScenes();
-            var branchName = GetFolderBranchName(GitExtensions.Branch);
-
-            IsBuilding = true;
-            if (releaseBuild)
-            {
-                BuildFlow(version, scenes, branchName, ReleaseFolder, ReleaseOptions);
-            }
-
-            version = SetVersion();
-
-            if (debugBuild)
-            {
-                BuildFlow(version, scenes, branchName, DebugFolder, DebugOptions);
-            }
-
-            if (deepProfileBuild)
-            {
-                EditorUserBuildSettings.SetPlatformSettings(EditorUserBuildSettings.activeBuildTarget.ToString(),
-                    "CopyPDBFiles", "true");
-                BuildFlow(version, scenes, branchName, DeepProfileFolder, DeepProfileOptions);
-            }
-
-            CleanupWizard();
-        }
-
-        private void BuildProfile()
+        private void BuildAllData(IEnumerable<BuildProfileDataSO> builds, string folder)
         {
             CheckBuildLocation();
             var scenes = GetBuildScenes();
@@ -190,50 +146,70 @@ namespace Build
 
             IsBuilding = true;
 
-            foreach (var buildData in profile.BuildTargets)
+            foreach (var data in builds)
             {
-                 EditorUserBuildSettings.standaloneBuildSubtarget = buildData.isHeadless
-                    ? StandaloneBuildSubtarget.Server
-                    : StandaloneBuildSubtarget.Player;
-            
-                if (!(EditorUserBuildSettings.selectedBuildTargetGroup == buildData.TargetGroup &&
-                      EditorUserBuildSettings.activeBuildTarget == buildData.Target))
+                if (data == null)
                 {
-                    if (!EditorUserBuildSettings.SwitchActiveBuildTarget(buildData.TargetGroup, buildData.Target))
-                    {
-                        Debug.LogError($"Failed to switch build target to {buildData.platformTarget}.", this);
-                        continue;
-                    }
+                    continue;
                 }
 
-                if (buildData.overrideExecutableName)
-                {
-                    if (string.IsNullOrWhiteSpace(buildData.executableName))
-                    {
-                        Debug.LogWarning("Executable path was invalid, using default exe.", this);
-                        _fileName = _productName + ".exe";
-                    }
-                    else
-                    {
-                        _fileName = buildData.executableName + ".exe";
-                    }
-                }
-
-                var version = SetVersion(buildData.isReleaseBuild);
-                var folder = profile.name;
-
-                BuildFlow(version, scenes, branchName, folder, buildData.GetBuildOptions(),
-                    buildData.name, buildData.isHeadless);
+                BuildData(data, scenes, branchName, folder);
             }
 
             CleanupWizard();
+        }
+
+        private void BuildData(BuildProfileDataSO data, string[] scenes, string branchName, string folder)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            EditorUserBuildSettings.standaloneBuildSubtarget = data.isHeadless
+                ? StandaloneBuildSubtarget.Server
+                : StandaloneBuildSubtarget.Player;
+
+            if (!(EditorUserBuildSettings.selectedBuildTargetGroup == data.TargetGroup &&
+                  EditorUserBuildSettings.activeBuildTarget == data.Target))
+            {
+                if (!EditorUserBuildSettings.SwitchActiveBuildTarget(data.TargetGroup, data.Target))
+                {
+                    Debug.LogError($"Failed to switch build target to {data.platformTarget}.", this);
+                    return;
+                }
+            }
+
+            if (data.overrideExecutableName)
+            {
+                if (string.IsNullOrWhiteSpace(data.executableName))
+                {
+                    Debug.LogWarning("Executable path was invalid, using default exe.", this);
+                    _fileName = _productName + ".exe";
+                }
+                else
+                {
+                    _fileName = data.executableName + ".exe";
+                }
+            }
+
+            var version = SetVersion(data.isReleaseBuild);
+
+            BuildFlow(version, scenes, branchName, folder, data.GetBuildOptions(),
+                data.name, data.isHeadless);
         }
 
         private void CleanupWizard()
         {
+            foreach (var data in defaultBuildData)
+            {
+                DestroyImmediate(data);
+            }
+
+            defaultBuildData.Clear();
+            defaultBuildData = null;
             IsBuilding = false;
             PlayerSettings.bundleVersion = _projectVersion.CoreVersion;
-            RevertToCurrentBuildTarget();
             Close();
         }
 
@@ -241,24 +217,17 @@ namespace Build
         {
             _currentBuildTarget = EditorUserBuildSettings.activeBuildTarget;
             _currentBuildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+            _currentSubTarget = (int)EditorUserBuildSettings.standaloneBuildSubtarget;
         }
 
         private void RevertToCurrentBuildTarget()
         {
             EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)_currentSubTarget;
-        
+
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(_currentBuildTargetGroup, _currentBuildTarget))
             {
                 Debug.LogError($"Failed to switch build target to {_currentBuildTarget}.", this);
             }
-        }
-
-        [MenuItem("Build/Wizard")]
-        private static void ShowBuildWindow()
-        {
-            var window = GetWindow<Wizard>();
-            window.titleContent = WindowTitle;
-            window.Show();
         }
 
         private void BuildFlow(string version, string[] scenes, string branchName, string folder, BuildOptions options,
@@ -295,6 +264,41 @@ namespace Build
             }
 
             return scenes;
+        }
+
+        private void CreateProfile()
+        {
+            var profilePath = Path.Combine(Application.dataPath, ProfileFolder);
+            if (!Directory.Exists(profilePath))
+            {
+                Directory.CreateDirectory(profilePath);
+            }
+
+            CreateBuildDataWindow.ShowWindow(profilePath, CreateProfileAsset);
+        }
+
+        private void CreateProfileAsset(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                Debug.LogWarning("Received an empty file to save.", this);
+                return;
+            }
+
+            var newProfile = CreateInstance<BuildProfileSO>();
+            newProfile.name = fileName;
+
+            profile = newProfile;
+
+            var path = Path.Combine(ProfileFolderPath, newProfile.name + ".asset");
+            AssetDatabase.CreateAsset(newProfile, path);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private void CreateBuildData()
+        {
+            defaultBuildData.Add(CreateInstance<BuildProfileDataSO>());
         }
 
         private string SetVersion(bool isRelease = false)
@@ -409,6 +413,11 @@ namespace Build
 
             var assetPath = AssetDatabase.GetAssetPath(profile);
             EditorPrefs.SetString(EditorProfileKey, assetPath);
+        }
+
+        public void OnPostprocessBuild(BuildReport report)
+        {
+            RevertToCurrentBuildTarget();
         }
     }
 }
