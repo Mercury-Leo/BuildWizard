@@ -202,11 +202,6 @@ namespace Build
 
         private void CleanupWizard()
         {
-            foreach (var data in defaultBuildData)
-            {
-                DestroyImmediate(data);
-            }
-
             defaultBuildData.Clear();
             defaultBuildData = null;
             IsBuilding = false;
