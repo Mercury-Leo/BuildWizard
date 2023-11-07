@@ -413,7 +413,7 @@ namespace Build
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            RevertToCurrentBuildTarget();
+            //RevertToCurrentBuildTarget();
         }
     }
 }
