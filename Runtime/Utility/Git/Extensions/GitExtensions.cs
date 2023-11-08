@@ -1,11 +1,3 @@
-/*
- * This document is the property of Oversight Technologies Ltd that reserves its rights document and to
- * the data / invention / content herein described.This document, including the fact of its existence, is not to be
- * disclosed, in whole or in part, to any other party and it shall not be duplicated, used, or copied in any
- * form, without the express prior written permission of Oversight authorized person. Acceptance of this document
- * will be construed as acceptance of the foregoing conditions.
- */
-
 using System;
 using Utility.Process.Extensions;
 using UnityEngine;
@@ -21,17 +13,68 @@ namespace Utility.Git.Extensions
         public static string NumberOfCommitsSinceTag => Run(@"rev-list --count " + LatestTag + "..HEAD");
         public static string LatestTag => Run(@"describe --abbrev=0 --tags");
 
+        public static string GetFullCommitHash()
+        {
+            string hash;
+            try
+            {
+                hash = FullCommitHash;
+            }
+            catch (GitException)
+            {
+                hash = CommitHash;
+            }
+
+            return hash;
+        }
+
+        public static string GetBranchName()
+        {
+            string name;
+            try
+            {
+                name = Branch;
+            }
+            catch (GitException)
+            {
+                name = "Default";
+            }
+
+            return name;
+        }
+
+        public static string GetCommitHash()
+        {
+            string hash;
+            try
+            {
+                hash = CommitHash;
+            }
+            catch (GitException)
+            {
+                hash = string.Empty;
+            }
+
+            return hash;
+        }
+
         public static string GetNumberOfCommits()
         {
             string number;
             try
             {
-                var tag = LatestTag;
                 number = NumberOfCommitsSinceTag;
             }
             catch (GitException)
             {
-                number = NumberOfCommits;
+                try
+                {
+                    number = NumberOfCommits;
+                }
+                catch (GitException)
+                {
+                    number = "0";
+                }
             }
 
             return number;
@@ -40,7 +83,7 @@ namespace Utility.Git.Extensions
         public static string Run(string arguments)
         {
             using var process = new System.Diagnostics.Process();
-            var exitCode = process.Run(@"git", arguments, Application.dataPath, out string output, out string errors);
+            var exitCode = process.Run(@"git", arguments, Application.dataPath, out var output, out var errors);
             if (exitCode == 0)
             {
                 return output;
@@ -52,11 +95,11 @@ namespace Utility.Git.Extensions
 
     public class GitException : InvalidOperationException
     {
-        public readonly int ExitCode;
+        public readonly int exitCode;
 
         public GitException(int exitCode, string errors) : base(errors)
         {
-            ExitCode = exitCode;
+            this.exitCode = exitCode;
         }
     }
 }
