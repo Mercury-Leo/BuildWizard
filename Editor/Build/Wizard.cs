@@ -232,6 +232,8 @@ namespace Build
             defaultBuildData.Clear();
             defaultBuildData = null;
             PlayerSettings.bundleVersion = _projectVersion.CoreVersion;
+            EditorUtility.RequestScriptReload();
+            UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
             Close();
         }
 
