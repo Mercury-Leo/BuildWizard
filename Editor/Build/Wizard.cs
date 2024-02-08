@@ -11,7 +11,6 @@ using UnityEngine;
 using Utility.Git.Extensions;
 using Utility.TextFile;
 using ProjectVersion;
-using Wizard;
 using static Wizard.WizardConventions;
 using static Build.WizardExtensions;
 
@@ -39,6 +38,9 @@ namespace Build
         [FoldoutGroup("Version"), ReadOnly] [ShowInInspector]
         private int _minor;
 
+        [FoldoutGroup("Version"), ReadOnly] [ShowInInspector]
+        private int _hotfix;
+
         [FoldoutGroup("Version"), ReadOnly]
         [ShowInInspector]
         [Tooltip(
@@ -59,6 +61,7 @@ namespace Build
 #pragma warning disable CS0414
         private bool _upgradedMajor;
         private bool _upgradedMinor;
+        private bool _upgradedHotfix;
 #pragma warning restore CS0414
 
         public static bool IsBuilding
@@ -125,6 +128,14 @@ namespace Build
         {
             _projectVersion.UpgradeMinor();
             _upgradedMinor = true;
+            SetVersionVisuals();
+        }
+
+        [HorizontalGroup("Version/Upgrade"), Button, DisableIf("_upgradedHotfix")]
+        public void UpgradeHotfix()
+        {
+            _projectVersion.UpgradeHotfix();
+            _upgradedHotfix = true;
             SetVersionVisuals();
         }
 
@@ -218,7 +229,7 @@ namespace Build
                 : StandaloneBuildSubtarget.Player;
 
             if (!(EditorUserBuildSettings.selectedBuildTargetGroup == data.TargetGroup &&
-                  EditorUserBuildSettings.activeBuildTarget == data.Target))
+                EditorUserBuildSettings.activeBuildTarget == data.Target))
             {
                 if (!EditorUserBuildSettings.SwitchActiveBuildTarget(data.TargetGroup, data.Target))
                 {
@@ -386,6 +397,7 @@ namespace Build
         {
             _major = _projectVersion.Major;
             _minor = _projectVersion.Minor;
+            _hotfix = _projectVersion.Hotfix;
         }
 
         private void LoadProfile()

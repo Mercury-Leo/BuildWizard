@@ -10,11 +10,13 @@ namespace ProjectVersion
     {
         [SerializeField, ReadOnly] private int major;
         [SerializeField, ReadOnly] private int minor;
+        [SerializeField, ReadOnly] private int hotfix;
 
         public int Major => major;
         public int Minor => minor;
+        public int Hotfix => hotfix;
 
-        public string CoreVersion => $"{major}.{minor}";
+        public string CoreVersion => $"{major}.{minor}.{hotfix}";
         public string Version => $"{CoreVersion}.{GitExtensions.GetNumberOfCommits()}";
         public string FullVersion => $"{Version}-{GitExtensions.GetCommitHash()}";
 
@@ -29,6 +31,11 @@ namespace ProjectVersion
             {
                 minor = 0;
             }
+
+            if (hotfix < 0)
+            {
+                hotfix = 0;
+            }
         }
 
         public void UpgradeMajor()
@@ -40,6 +47,12 @@ namespace ProjectVersion
         public void UpgradeMinor()
         {
             minor++;
+            SaveSO();
+        }
+
+        public void UpgradeHotfix()
+        {
+            hotfix++;
             SaveSO();
         }
 
