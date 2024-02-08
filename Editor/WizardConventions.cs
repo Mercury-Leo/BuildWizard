@@ -4,7 +4,7 @@ namespace Wizard
     {
         public const string BuildFolder = "Builds";
         public const string VersionInformationName = "VersionInformation.txt";
-        public const string Pattern = @"^(.*\/){0,1}(.{1,15})";
+        public const string Pattern = @"^(.*\/){0,1}(.{1,25})";
         public const string Dash = "-";
         public const string ProfileFolderPath = "Assets" + "/" + ProfileFolder;
         public const string ProfileFolder = "BuildProfiles";
