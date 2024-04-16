@@ -400,7 +400,7 @@ namespace Build
             _hotfix = _projectVersion.Hotfix;
         }
 
-        private void LoadProfile()
+        public void LoadProfile()
         {
             var assetPath = EditorPrefs.GetString(EditorProfileKey);
 
