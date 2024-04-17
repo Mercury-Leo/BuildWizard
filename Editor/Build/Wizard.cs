@@ -243,6 +243,12 @@ namespace Build
             defaultBuildData.Clear();
             defaultBuildData = null;
             PlayerSettings.bundleVersion = _projectVersion.CoreVersion;
+
+            if (UnityEditorInternal.InternalEditorUtility.inBatchMode)
+            {
+                EditorApplication.Exit(0);
+            }
+            
             EditorUtility.RequestScriptReload();
             UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
             Close();
