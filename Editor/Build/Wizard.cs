@@ -83,8 +83,8 @@ namespace Build
         private BuildTargetGroup _currentBuildTargetGroup = BuildTargetGroup.Standalone;
         private int _currentSubTarget;
 
-        public int callbackOrder => 0;
-
+        public event Action<string> OnBuilt;
+        
         [MenuItem("Build/Wizard")]
         private static void ShowBuildWindow()
         {
@@ -396,6 +396,7 @@ namespace Build
             }
 
             var filePath = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, VersionInformationName);
+            OnBuilt?.Invoke(filePath);
             _textFile.WriteToTextFileAt(filePath, contents);
         }
 
