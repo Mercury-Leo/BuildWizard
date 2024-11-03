@@ -85,7 +85,7 @@ namespace Build
 
         public event Action<string> OnBuilt;
         
-        [MenuItem("Build/Wizard")]
+        [MenuItem("Wizard/Build")]
         private static void ShowBuildWindow()
         {
             var window = GetWindow<Wizard>();
