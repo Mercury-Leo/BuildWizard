@@ -1,3 +1,7 @@
+Obsolete with Unity 6
+
+-----
+
 The Build Wizard makes building your game easier to handle.
 
 Features:
